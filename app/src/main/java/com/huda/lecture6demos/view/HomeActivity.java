@@ -19,6 +19,10 @@ public class HomeActivity extends AppCompatActivity {
         binding = ActivityHomeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        viewModel.getSavedEmail();
+        viewModel.emailLiveData.observe(this,s -> {
+            binding.email.setText(s+"\n you are logged in");
+        });
         binding.logout.setOnClickListener(v -> {
             viewModel.logout();
             Intent intent = new Intent(this, LoginActivity.class);
