@@ -1,5 +1,8 @@
 package com.huda.lecture6demos.viewmodel;
 
+import android.content.Context;
+
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -15,5 +18,11 @@ public class HomeViewModel extends ViewModel {
 
     public void getSavedEmail() {
         emailLiveData = repo.getSavedEmail();
+    }
+    public void updateToken() {
+        repo.updateToken();
+    }
+    public void sendNotification(String id,String msg){
+        repo.getNotificationData(id,msg);
     }
 }

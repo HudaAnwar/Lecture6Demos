@@ -6,8 +6,9 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.huda.lecture6demos.viewmodel.HomeViewModel;
+import com.google.firebase.auth.FirebaseAuth;
 import com.huda.lecture6demos.databinding.ActivityHomeBinding;
+import com.huda.lecture6demos.viewmodel.HomeViewModel;
 
 public class HomeActivity extends AppCompatActivity {
     private ActivityHomeBinding binding;
@@ -20,8 +21,8 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         viewModel.getSavedEmail();
-        viewModel.emailLiveData.observe(this,s -> {
-            binding.email.setText(s+"\n you are logged in");
+        viewModel.emailLiveData.observe(this, s -> {
+            binding.email.setText(s + "\n you are logged in");
         });
         binding.logout.setOnClickListener(v -> {
             viewModel.logout();
@@ -31,5 +32,9 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+        viewModel.updateToken();
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        viewModel.sendNotification(uid, "You just logged in");
+
     }
 }

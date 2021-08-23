@@ -1,5 +1,7 @@
 package com.huda.lecture6demos.repo;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
@@ -10,6 +12,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.huda.lecture6demos.R;
+import com.huda.lecture6demos.model.Data;
+import com.huda.lecture6demos.model.FCMRetrofit;
+import com.huda.lecture6demos.model.MyResponse;
+import com.huda.lecture6demos.model.Sender;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class FirebaseRepo {
 
@@ -18,6 +30,7 @@ public class FirebaseRepo {
     public MutableLiveData<String> loginSuccessful = new MutableLiveData<>();
     public MutableLiveData<String> loginFailed = new MutableLiveData<>();
     private FirebaseAuth auth = FirebaseAuth.getInstance();
+    private boolean notifyMsg = true;
 
     public void signUp(String email, String pass) {
         auth.createUserWithEmailAndPassword(email, pass)
@@ -82,4 +95,82 @@ public class FirebaseRepo {
         });
         return emailLiveData;
     }
+
+    public void updateToken() {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                String newToken = task.getResult();
+                String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                DatabaseReference reference = FirebaseDatabase.getInstance()
+                        .getReference("token");
+                reference.child(uid).setValue(newToken);
+            }
+        });
+    }
+
+    public void getNotificationData(
+            String receiver,
+            String msg
+    ) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (this.notifyMsg) {
+            sendNotification(
+                    receiver,
+                    msg,
+                    uid
+            );
+        }
+        this.notifyMsg = false;
+    }
+
+
+    private void sendNotification(
+            String receiver,
+            String msg, String uid
+    ) {
+        DatabaseReference tokens = FirebaseDatabase.getInstance()
+                .getReference("token").child(receiver);
+        tokens.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String token = snapshot.getValue(String.class);
+                Data data = new Data(
+                        R.drawable.ic_launcher_foreground,
+                        msg, "Nursy", receiver
+                );
+
+                Sender sender = new Sender(data, token);
+                sendRetrofitReq(sender);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void sendRetrofitReq(Sender sender) {
+        Call<MyResponse> call =
+                FCMRetrofit.getApiService().sendNotification(sender);
+        call.enqueue(new Callback<MyResponse>() {
+            @Override
+            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                if (response.code() == 200) {
+                    if (response.body().success != 1) {
+                        Log.d("TAG", "onResponse: success");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MyResponse> call, Throwable t) {
+                Log.d("TAG", "onResponse: fail");
+            }
+
+        });
+    }
+
+
 }
