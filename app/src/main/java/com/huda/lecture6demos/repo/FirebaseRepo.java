@@ -24,6 +24,7 @@ public class FirebaseRepo {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         signUpSuccessful.setValue("Sign up was Successful");
+                        saveEmail(email);
                     } else {
                         signUpFailed.setValue("Sign up Failed");
                     }
@@ -39,7 +40,6 @@ public class FirebaseRepo {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         loginSuccessful.setValue("Login was Successful");
-                        saveEmail(email);
                     } else {
                         loginFailed.setValue(task.getException().getMessage());
                     }
